@@ -1,49 +1,55 @@
 const puppeteer = require('puppeteer');
 const promt = require('prompt-sync')();
 const fs = require('fs');
-var interval;
 
-var searchResult = [];
-
-function log(m){
-  console.log(m)
+var logCount = 23;
+var step = 0;
+var char = "="
+let l = char;
+function log(){
+  step++;
+  console.log(l,Math.floor((step/logCount)*100)+'%');
+  l += char
 }
 function delay(timeout) {
   return new Promise((resolve) => {
     setTimeout(resolve, timeout);
   });
 }
+let search ;
 
 (async () => {
+  search = promt("Search:")
   const browser = await puppeteer.launch({headless:false, devtools:false,});
   const page = await browser.newPage();
-  log("Goto MLWBD")
   await page.goto('https://mlwbd.bond/');
   await page.waitForSelector('#s');
-  await page.type('#s',"iron man");
+  await page.type('#s',search);
+  log()
   await page.waitForSelector('form > .search-button');
   await page.click('form > .search-button')
-  log("searching...")
-
   await page.waitForSelector(".title > a")
-
+  log()
 
  let link = await page.evaluate(()=>
             Array.from(document.querySelectorAll(".title > a"),
             (e,i)=>{return {id:i,title :e.innerText,src:e.href}}));
-  log("searching completed")
+  log()
 
-//console.log(link);
+  link.forEach(el=>{
+    console.log(el.id,el.title)
+    console.log('\n');
+  })
 
-var searchId = 1//promt("Enter search result Id:")
+var searchId = promt("Enter search result Id:")
 var targetedResult = link[parseInt(searchId)];
 
  await page.goto(targetedResult.src);
- log("fetched searching...")
+ log()
 
 await page.waitForSelector('[data-wpel-link="internal"]');
 await page.click('[data-wpel-link="internal"]');
-log("click target....")
+log()
 
 const pageTarget = page.target();
 const newTarget = await browser.waitForTarget(target => target.opener() === pageTarget);
@@ -53,25 +59,21 @@ const newPage = await newTarget.page();
 
 await newPage.waitForSelector('form > .myButton');
 await newPage.click('form > .myButton')
-log("tap download button 1...")
+log()
 
-let currentUrl =  null; 
+    log()
 
-  // setTimeout(async () => {
-    log("waiting...")
-
-    await delay(10000)
-    log("waiting... done")
+    await delay(6000)
+    log()
 
     await newPage.waitForSelector('#download-button')
     await newPage.click('#download-button')
-    log("tap download button #download-button...")
+    log()
 
 
-  log("waiting for load")
+  log()
   await newPage.waitForNavigation({waitUntil:'domcontentloaded'})
   await newPage.waitForSelector('script');
-      console.log("domcontentloaded");
 
      await newPage.evaluate(()=>{
         document.title = "111"
@@ -81,23 +83,23 @@ let currentUrl =  null;
 
     await newPage.waitForSelector('#main-download')
     await newPage.click('#main-download')
-    log("tap download button #main-download...")
+    log()
 
     await delay(2000);
     await newPage.waitForSelector('#download')
-    log("tap download button #download...")
+    log()
     await newPage.click('#download')
-    log("clicked download button #download...")
+    log()
 
-    log(" waiting for Main download button")
+    log()
   
   await newPage.waitForNavigation({waitUntil:'load'}).then(async()=>{
-    log("page loaded")
+    log()
      await newPage.waitForSelector(".btn").then(async()=>{
-    log("find main download button")
+    log()
     await delay(3000)
      await newPage.click(".btn");
-    log("clicked Main download button")
+    log()
   });
   })
  
@@ -105,7 +107,7 @@ let currentUrl =  null;
   await newPage.waitForNavigation({
     waitUntil:'load'
   })
-  log("wait for link")
+  log()
    let d = await newPage.evaluate(()=>{
     let data = []
     let f1 = "";
@@ -138,21 +140,24 @@ let currentUrl =  null;
     if(d[i].link.length === 0)continue;
     console.log(`${i} ${d[i].res} \n`);
     d[i].link.forEach((el,k)=>{
-      console.log(`\t ${k} ${el.name} ${el.src}`)
+      console.log(`\t id ${k} ${el.name}`)
     })
   }
   let x = promt("x:")
+  log();
   let y = promt("y:")
+  log();
+
   await newPage.goto(d[x].link[y].src);
-  log("10%")
+  log()
   await newPage.waitForNavigation({waitUntil:'load'}).then(async()=>{
       await newPage.click('.butt');
   })
-log("69%")
+log()
   await newPage.waitForSelector(".btn").then(async()=>{
       await newPage.click(".btn")
   })
-log("99.9%");
+log();
   await newPage.waitForNavigation({waitUntil:'load'}).then(async()=>{
       console.log(await newPage.url());
       browser.close()
